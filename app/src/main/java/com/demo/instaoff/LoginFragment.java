@@ -1,6 +1,7 @@
 package com.demo.instaoff;
 
 import android.app.Activity;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.net.Uri;
 import android.os.Bundle;
@@ -64,15 +65,42 @@ public class LoginFragment extends DialogFragment {
     @OnClick(R.id.btn_login)
     public void loginButtonClick (View view){
         Log.i(TAG, "Button Clicked");
-        //showLoginDialog();
-    }
+        _emailText.setText("testemailaccount28@gmx.com");
+        _passwordText.setText("testemailaccount28");
+        if (!validate()) {
+            onLoginFailed();
+            return;
+        }
 
+        _loginButton.setEnabled(false);
+
+        final ProgressDialog progressDialog = new ProgressDialog(getContext(),
+                R.style.FullscreenTheme);
+        progressDialog.setIndeterminate(true);
+        progressDialog.setMessage("Authenticating...");
+        progressDialog.show();
+
+        String email = _emailText.getText().toString();
+        String password = _passwordText.getText().toString();
+
+        // TODO: Implement your own authentication logic here.
+
+        new android.os.Handler().postDelayed(
+                new Runnable() {
+                    public void run() {
+                        // On complete call either onLoginSuccess or onLoginFailed
+                        onLoginSuccess();
+                        // onLoginFailed();
+                        progressDialog.dismiss();
+                    }
+                }, 3000);
+    }
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_login, container, false);
-        unbinder = ButterKnife.bind(getActivity(), view);
+        unbinder = ButterKnife.bind(this, view);
         return view;
     }
     @Override public void onDestroyView() {
@@ -84,17 +112,6 @@ public class LoginFragment extends DialogFragment {
     public void onButtonPressed(Uri uri) {
         if (mListener != null) {
             mListener.onFragmentInteraction(uri);
-        }
-    }
-
-    @Override
-    public void onAttach(Context context) {
-        super.onAttach(context);
-        try {
-            mListener = (OnFragmentInteractionListener) context;
-        } catch (ClassCastException e) {
-            throw new ClassCastException(context.toString()
-                    + " must implement OnFragmentInteractionListener");
         }
     }
 
@@ -117,8 +134,8 @@ public class LoginFragment extends DialogFragment {
             _emailText.setError(null);
         }
 
-        if (password.isEmpty() || password.length() < 4 || password.length() > 10) {
-            _passwordText.setError("between 4 and 10 alphanumeric characters");
+        if (password.isEmpty() || password.length() < 4 || password.length() > 24) {
+            _passwordText.setError("between 4 and 24 alphanumeric characters");
             valid = false;
         } else {
             _passwordText.setError(null);
@@ -126,7 +143,20 @@ public class LoginFragment extends DialogFragment {
 
         return valid;
     }
-    /**
+
+    public void onLoginSuccess() {
+        _loginButton.setEnabled(true);
+        //finish();
+    }
+
+    public void onLoginFailed() {
+        //Toast.makeText(getBaseContext(), "Login failed", Toast.LENGTH_LONG).show();
+
+        _loginButton.setEnabled(true);
+    }
+
+
+/**
      * This interface must be implemented by activities that contain this
      * fragment to allow an interaction in this fragment to be communicated
      * to the activity and potentially other fragments contained in that
