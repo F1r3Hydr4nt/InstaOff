@@ -7,6 +7,10 @@ import android.app.Activity;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.net.Uri;
+import android.support.v4.app.FragmentManager;
+import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 
@@ -17,7 +21,9 @@ import android.view.View;
  *
  * @see SystemUiHider
  */
-public class LoginScreen extends Activity {
+public class LoginScreen extends AppCompatActivity
+        implements LoginFragment.OnFragmentInteractionListener{
+    private static final String TAG = "LoginScreen";
     /**
      * Whether or not the system UI should be auto-hidden after
      * {@link #AUTO_HIDE_DELAY_MILLIS} milliseconds.
@@ -113,6 +119,7 @@ public class LoginScreen extends Activity {
         // operations to prevent the jarring behavior of controls going away
         // while interacting with the UI.
         findViewById(R.id.dummy_button).setOnTouchListener(mDelayHideTouchListener);
+        findViewById(R.id.dummy_button).setOnClickListener(mLoginButtonClickListener);
     }
 
     @Override
@@ -141,6 +148,21 @@ public class LoginScreen extends Activity {
         }
     };
 
+    View.OnClickListener mLoginButtonClickListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            Log.i(TAG,"Button Clicked");
+            showLoginDialog();
+        }
+    };
+
+    private void showLoginDialog(){
+        FragmentManager fm = getSupportFragmentManager();
+        LoginFragment mLoginFragment = LoginFragment.newInstance();
+        mLoginFragment.show(fm, "login_fragment");
+    }
+
+
     Handler mHideHandler = new Handler();
     Runnable mHideRunnable = new Runnable() {
         @Override
@@ -148,7 +170,12 @@ public class LoginScreen extends Activity {
             mSystemUiHider.hide();
         }
     };
+        //rest code is omitted
 
+        @Override
+        public void onFragmentInteraction(Uri uri){
+            //you can leave it empty
+        }
     /**
      * Schedules a call to hide() in [delay] milliseconds, canceling any
      * previously scheduled calls.
