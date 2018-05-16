@@ -21,6 +21,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.webkit.WebResourceRequest;
 import android.webkit.ValueCallback;
+import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.ProgressBar;
@@ -92,8 +93,11 @@ public class LoginScreen extends AppCompatActivity{
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login_screen);
-
         spUser = getSharedPreferences(SP, MODE_PRIVATE);
+
+        spEdit = spUser.edit();
+        spEdit.clear();
+        spEdit.commit();
 
         if (isLoggedIn()){
             startActivity(new Intent(this, ProfileView.class));
@@ -103,9 +107,6 @@ public class LoginScreen extends AppCompatActivity{
         authURLFull = AUTHURL + "client_id=" + CLIENT_ID + "&redirect_uri=" + REDIRECT_URI + "&response_type=code&display=touch";
         tokenURLFull = TOKENURL + "?client_id=" + CLIENT_ID + "&client_secret=" + CLIENT_SECRET + "&redirect_uri=" + REDIRECT_URI + "&grant_type=authorization_code";
         progressBar = (ProgressBar) findViewById(R.id.progress_bar);
-        spEdit = spUser.edit();
-        spEdit.clear();
-        spEdit.commit();
 /*
         final View controlsView = findViewById(R.id.fullscreen_content_controls);
         final View contentView = findViewById(R.id.fullscreen_content);
@@ -189,7 +190,7 @@ public class LoginScreen extends AppCompatActivity{
         WebView webView = new WebView(this);
         webView.setVerticalScrollBarEnabled(false);
         webView.setHorizontalScrollBarEnabled(false);
-        webView.setWebViewClient(new MyWVClient());
+        webView.setWebViewClient(new MyWVClient());//ForceLogin here
         webView.getSettings().setJavaScriptEnabled(true);
         webView.loadUrl(url);
 
@@ -198,13 +199,18 @@ public class LoginScreen extends AppCompatActivity{
 
     /*****  A client to know about WebView navigations  ***********************/
     class MyWVClient extends WebViewClient {
-
         @Override
         public void onPageStarted(WebView view, String url, Bitmap favicon) {
             super.onPageStarted(view, url, favicon);
-            view.clearCache(true);
+            WebSettings mWebSettings = view.getSettings();
 
-            //progressBar.setVisibility(View.GONE);
+            mWebSettings.setSaveFormData(false);
+            view.clearCache(true);
+            view.clearHistory();
+            /*
+            CookieSyncManager cookieSyncMngr = CookieSyncManager.createInstance(context);
+            CookieManager cookieManager = CookieManager.getInstance();
+            cookieManager.removeAllCookie();*/
             progressBar.setVisibility(View.VISIBLE);
             progressBar.bringToFront();
         }
@@ -212,18 +218,24 @@ public class LoginScreen extends AppCompatActivity{
         @Override
         public boolean shouldOverrideUrlLoading(WebView view, String url) {
             if (url.startsWith(REDIRECT_URI)) {
+                Log.d(TAG,"Overriding "+url);//
+                view.setVisibility(View.GONE);
                 handleUrl(url);
                 return true;
             }
+            Log.d(TAG,"Not overriding "+url);
+            //https://instagram.com/accounts/logout/
+            //https://www.instagram.com/oauth/authorize/?client_id=4216ac46ab584340adacc95d60a58944&redirect_uri=https://www.random.ie/instagram/access-token&response_type=code&display=touch
+            //https://www.instagram.com/accounts/login/?force_classic_login=&client_id=4216ac46ab584340adacc95d60a58944&next=/oauth/authorize/%3Fclient_id%3D4216ac46ab584340adacc95d60a58944%26redirect_uri%3Dhttps%3A//www.random.ie/instagram/access-token%26response_type%3Dcode%26display%3Dtouch
             return false;
         }
 
         // The java script string to execute in web view after page loaded
         // First line put a value in input box
         // Second line submit the form
-        final String js = "";/*"javascript:"+
+        final String js = "javascript:"+
                 "document.getElementById('id_username').value='instaoffagram';"+
-                "document.getElementById('id_password').value='1Asdfgh!';";*/
+                "document.getElementById('id_password').value='1Asdfgh!';";
 
         @Override
         public void onPageFinished(WebView view, String url) {
@@ -258,7 +270,7 @@ public class LoginScreen extends AppCompatActivity{
         String code;
 
         public MyAsyncTask(String code) {
-            Log.d(TAG,code);
+            Log.d(TAG,"Async: "+code);
             this.code = code;
         }
 
@@ -336,8 +348,10 @@ public class LoginScreen extends AppCompatActivity{
     private boolean isLoggedIn(){
         String token = spUser.getString(SP_TOKEN, null);
         if (token != null){
-        //    return true;
+            Log.d(TAG,"Token found");
+            return true;
         }
+        Log.d(TAG,"NO Token");
         return false;
     }
 /*
