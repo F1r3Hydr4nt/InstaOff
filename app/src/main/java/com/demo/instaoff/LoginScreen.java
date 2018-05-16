@@ -19,6 +19,8 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
+import android.webkit.CookieManager;
+import android.webkit.CookieSyncManager;
 import android.webkit.WebResourceRequest;
 import android.webkit.ValueCallback;
 import android.webkit.WebSettings;
@@ -49,18 +51,9 @@ import static com.demo.instaoff.CONSTANTS.*;
 public class LoginScreen extends AppCompatActivity{
        // implements LoginFragment.OnFragmentInteractionListener{
     private static final String TAG = "LoginScreen";
-    private String authURLFull;
-    private String tokenURLFull;
-    private String code;
-    private String accessTokenString;
-    private String dp;
-    private String fullName;
-
-    private Dialog dialog;
-    ProgressBar progressBar;
 
     SharedPreferences spUser;
-    SharedPreferences.Editor spEdit;
+
     /**
      * Whether or not the system UI should be auto-hidden after
      * {@link #AUTO_HIDE_DELAY_MILLIS} milliseconds.
@@ -95,18 +88,11 @@ public class LoginScreen extends AppCompatActivity{
         setContentView(R.layout.activity_login_screen);
         spUser = getSharedPreferences(SP, MODE_PRIVATE);
 
-        spEdit = spUser.edit();
-        spEdit.clear();
-        spEdit.commit();
-
         if (isLoggedIn()){
             startActivity(new Intent(this, ProfileView.class));
             finish();
         }
 
-        authURLFull = AUTHURL + "client_id=" + CLIENT_ID + "&redirect_uri=" + REDIRECT_URI + "&response_type=code&display=touch";
-        tokenURLFull = TOKENURL + "?client_id=" + CLIENT_ID + "&client_secret=" + CLIENT_SECRET + "&redirect_uri=" + REDIRECT_URI + "&grant_type=authorization_code";
-        progressBar = (ProgressBar) findViewById(R.id.progress_bar);
 /*
         final View controlsView = findViewById(R.id.fullscreen_content_controls);
         final View contentView = findViewById(R.id.fullscreen_content);
@@ -182,169 +168,6 @@ public class LoginScreen extends AppCompatActivity{
         Client Secret 88818fa446e84e909086fff4390799e5
          */
 
-    /*****  Show Instagram login page in a dialog *****************************/
-    public void setupWebviewDialog(String url) {
-        dialog = new Dialog(this);
-        dialog.setTitle("Insta Login");
-        Log.i(TAG,url);
-        WebView webView = new WebView(this);
-        webView.setVerticalScrollBarEnabled(false);
-        webView.setHorizontalScrollBarEnabled(false);
-        webView.setWebViewClient(new MyWVClient());//ForceLogin here
-        webView.getSettings().setJavaScriptEnabled(true);
-        webView.loadUrl(url);
-
-        dialog.setContentView(webView);
-    }
-
-    /*****  A client to know about WebView navigations  ***********************/
-    class MyWVClient extends WebViewClient {
-        @Override
-        public void onPageStarted(WebView view, String url, Bitmap favicon) {
-            super.onPageStarted(view, url, favicon);
-            WebSettings mWebSettings = view.getSettings();
-
-            mWebSettings.setSaveFormData(false);
-            view.clearCache(true);
-            view.clearHistory();
-            /*
-            CookieSyncManager cookieSyncMngr = CookieSyncManager.createInstance(context);
-            CookieManager cookieManager = CookieManager.getInstance();
-            cookieManager.removeAllCookie();*/
-            progressBar.setVisibility(View.VISIBLE);
-            progressBar.bringToFront();
-        }
-
-        @Override
-        public boolean shouldOverrideUrlLoading(WebView view, String url) {
-            if (url.startsWith(REDIRECT_URI)) {
-                Log.d(TAG,"Overriding "+url);//
-                view.setVisibility(View.GONE);
-                handleUrl(url);
-                return true;
-            }
-            Log.d(TAG,"Not overriding "+url);
-            //https://instagram.com/accounts/logout/
-            //https://www.instagram.com/oauth/authorize/?client_id=4216ac46ab584340adacc95d60a58944&redirect_uri=https://www.random.ie/instagram/access-token&response_type=code&display=touch
-            //https://www.instagram.com/accounts/login/?force_classic_login=&client_id=4216ac46ab584340adacc95d60a58944&next=/oauth/authorize/%3Fclient_id%3D4216ac46ab584340adacc95d60a58944%26redirect_uri%3Dhttps%3A//www.random.ie/instagram/access-token%26response_type%3Dcode%26display%3Dtouch
-            return false;
-        }
-
-        // The java script string to execute in web view after page loaded
-        // First line put a value in input box
-        // Second line submit the form
-        final String js = "javascript:"+
-                "document.getElementById('id_username').value='instaoffagram';"+
-                "document.getElementById('id_password').value='1Asdfgh!';";
-
-        @Override
-        public void onPageFinished(WebView view, String url) {
-            super.onPageFinished(view, url);
-            view.evaluateJavascript(js, new ValueCallback<String>() {
-                @Override
-                public void onReceiveValue(String s) {
-                    Log.d(TAG,s+" WebView Finished");
-                }
-            });
-
-            progressBar.setVisibility(View.INVISIBLE);
-            dialog.show();
-        }
-    }
-
-    /*****  Check webview url for access token code or error ******************/
-    public void handleUrl(String url) {
-        if (url.contains("code")) {
-            String temp[] = url.split("=");
-            code = temp[1];
-            new MyAsyncTask(code).execute();
-
-        } else if (url.contains("error")) {
-            String temp[] = url.split("=");
-            Log.e(TAG, "Login error: "+temp[temp.length - 1]);
-        }
-    }
-
-    /*****  AsyncTast to get user details after successful authorization ******/
-    public class MyAsyncTask extends AsyncTask<URL, Integer, Long> {
-        String code;
-
-        public MyAsyncTask(String code) {
-            Log.d(TAG,"Async: "+code);
-            this.code = code;
-        }
-
-        protected void onPreExecute() {
-            progressBar.setVisibility(View.VISIBLE);
-        }
-
-        protected Long doInBackground(URL... urls) {
-            long result = 0;
-
-            try {
-                URL url = new URL(tokenURLFull);
-                HttpsURLConnection httpsURLConnection = (HttpsURLConnection) url.openConnection();
-                httpsURLConnection.setRequestMethod("POST");
-                httpsURLConnection.setDoInput(true);
-                httpsURLConnection.setDoOutput(true);
-                OutputStreamWriter outputStreamWriter = new OutputStreamWriter(httpsURLConnection.getOutputStream());
-                outputStreamWriter.write("client_id=" + CLIENT_ID +
-                        "&client_secret=" + CLIENT_SECRET +
-                        "&grant_type=authorization_code" +
-                        "&redirect_uri=" + REDIRECT_URI +
-                        "&code=" + code);
-
-                outputStreamWriter.flush();
-                String response = streamToString(httpsURLConnection.getInputStream());
-                JSONObject jsonObject = (JSONObject) new JSONTokener(response).nextValue();
-                accessTokenString = jsonObject.getString("access_token"); //Here is your ACCESS TOKEN
-                dp = jsonObject.getJSONObject("user").getString("profile_picture");
-                fullName = jsonObject.getJSONObject("user").getString("full_name"); //This is how you can get the user info. You can explore the JSON sent by Instagram as well to know what info you got in a response
-
-                spEdit = spUser.edit();
-                spEdit.putString(SP_TOKEN, accessTokenString);
-                spEdit.putString(SP_NAME, fullName);
-                spEdit.putString(SP_DP, dp);
-                spEdit.commit();
-
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-
-            return result;
-        }
-
-        protected void onPostExecute(Long result) {
-            dialog.dismiss();
-            progressBar.setVisibility(View.INVISIBLE);
-            startActivity(new Intent(LoginScreen.this, ProfileView.class));
-            finish();
-        }
-    }
-
-    /*****  Converting stream to string ***************************************/
-    public static String streamToString(InputStream is) throws IOException {
-        String str = "";
-
-        if (is != null) {
-            StringBuilder sb = new StringBuilder();
-            String line;
-
-            try {
-                BufferedReader reader = new BufferedReader(new InputStreamReader(is));
-                while ((line = reader.readLine()) != null) {
-                    sb.append(line);
-                }
-                reader.close();
-
-            } finally {
-                is.close();
-            }
-            str = sb.toString();
-        }
-        return str;
-    }
-
     private boolean isLoggedIn(){
         String token = spUser.getString(SP_TOKEN, null);
         if (token != null){
@@ -385,12 +208,10 @@ public class LoginScreen extends AppCompatActivity{
         @Override
         public void onClick(View v) {
             Log.i(TAG,"Button Clicked");
-            //showLoginDialog();
-               setupWebviewDialog(authURLFull);
-                progressBar.setVisibility(View.VISIBLE);
+            showLoginDialog();
         }
     };
-/*
+
     private void showLoginDialog(){
         FragmentManager fm = getSupportFragmentManager();
         LoginFragment mLoginFragment = LoginFragment.newInstance();
@@ -399,7 +220,7 @@ public class LoginScreen extends AppCompatActivity{
 
 
         //rest code is omitted
-
+/*
         @Override
         public void onFragmentInteraction(Uri uri){
             //you can leave it empty
