@@ -94,14 +94,18 @@ public class LoginScreen extends AppCompatActivity{
         setContentView(R.layout.activity_login_screen);
 
         spUser = getSharedPreferences(SP, MODE_PRIVATE);
+
         if (isLoggedIn()){
-            startActivity(new Intent(this, LoginFragment.class));
+            startActivity(new Intent(this, ProfileView.class));
             finish();
         }
 
         authURLFull = AUTHURL + "client_id=" + CLIENT_ID + "&redirect_uri=" + REDIRECT_URI + "&response_type=code&display=touch";
         tokenURLFull = TOKENURL + "?client_id=" + CLIENT_ID + "&client_secret=" + CLIENT_SECRET + "&redirect_uri=" + REDIRECT_URI + "&grant_type=authorization_code";
         progressBar = (ProgressBar) findViewById(R.id.progress_bar);
+        spEdit = spUser.edit();
+        spEdit.clear();
+        spEdit.commit();
 /*
         final View controlsView = findViewById(R.id.fullscreen_content_controls);
         final View contentView = findViewById(R.id.fullscreen_content);
@@ -198,6 +202,9 @@ public class LoginScreen extends AppCompatActivity{
         @Override
         public void onPageStarted(WebView view, String url, Bitmap favicon) {
             super.onPageStarted(view, url, favicon);
+            view.clearCache(true);
+
+            //progressBar.setVisibility(View.GONE);
             progressBar.setVisibility(View.VISIBLE);
             progressBar.bringToFront();
         }
@@ -214,10 +221,9 @@ public class LoginScreen extends AppCompatActivity{
         // The java script string to execute in web view after page loaded
         // First line put a value in input box
         // Second line submit the form
-        final String js = "javascript:var allElements = document.getElementsByTagName("+'"'+"*"+'"'+"); console.log(allElements.length);"+
-"for (var i = 0, n = allElements.length; i < n; ++i) {var el = allElements[i];if (el.id) { console.log(el.id);}}"+
-                "document.getElementById('id_username').value='android';"+
-                "document.getElementById('id_password').value='android';";
+        final String js = "";/*"javascript:"+
+                "document.getElementById('id_username').value='instaoffagram';"+
+                "document.getElementById('id_password').value='1Asdfgh!';";*/
 
         @Override
         public void onPageFinished(WebView view, String url) {
@@ -236,7 +242,6 @@ public class LoginScreen extends AppCompatActivity{
 
     /*****  Check webview url for access token code or error ******************/
     public void handleUrl(String url) {
-
         if (url.contains("code")) {
             String temp[] = url.split("=");
             code = temp[1];
@@ -253,6 +258,7 @@ public class LoginScreen extends AppCompatActivity{
         String code;
 
         public MyAsyncTask(String code) {
+            Log.d(TAG,code);
             this.code = code;
         }
 
@@ -299,7 +305,7 @@ public class LoginScreen extends AppCompatActivity{
         protected void onPostExecute(Long result) {
             dialog.dismiss();
             progressBar.setVisibility(View.INVISIBLE);
-            //startActivity(new Intent(LoginScreen.this, LoginFragment.class));
+            startActivity(new Intent(LoginScreen.this, ProfileView.class));
             finish();
         }
     }
@@ -367,7 +373,7 @@ public class LoginScreen extends AppCompatActivity{
             Log.i(TAG,"Button Clicked");
             //showLoginDialog();
                setupWebviewDialog(authURLFull);
-                //progressBar.setVisibility(View.VISIBLE);
+                progressBar.setVisibility(View.VISIBLE);
         }
     };
 /*
