@@ -146,7 +146,7 @@ public class LoginFragment extends DialogFragment {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_login, container, false);
         unbinder = ButterKnife.bind(this, view);
-        _usernameText.setText("instaoffagram");
+        _usernameText.setText("anotheremail321");
         _passwordText.setText("1Asdfgh!");
         return view;
     }

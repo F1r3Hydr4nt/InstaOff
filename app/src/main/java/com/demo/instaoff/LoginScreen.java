@@ -214,7 +214,7 @@ public class LoginScreen extends AppCompatActivity{
 
     private void showLoginDialog(){
         FragmentManager fm = getSupportFragmentManager();
-        LoginFragment mLoginFragment = LoginFragment.newInstance();
+        LoginWebViewFragment mLoginFragment = LoginWebViewFragment.newInstance();
         mLoginFragment.show(fm, "login_fragment");
     }
 
