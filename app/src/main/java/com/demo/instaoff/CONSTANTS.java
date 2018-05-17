@@ -6,8 +6,14 @@ public class CONSTANTS {
     public static final String REDIRECT_URI = "https://www.random.ie/instagram/access-token";
     public static final String AUTHURL = "https://instagram.com/oauth/authorize/?";
     public static final String TOKENURL = "https://api.instagram.com/oauth/access_token";
+    public static final String APIURL = "https://api.instagram.com/v1";
     public static final String SP = "SP_USER";
     public static final String SP_TOKEN = "TOKEN";
-    public static final String SP_NAME = "NAME";
-    public static final String SP_DP = "DP";
+    public static final String SP_USER_FULL_NAME = "FULL_NAME";
+    public static final String SP_USER_PROFILER = "PROFILER";
+    public static final String SP_USER_BIO = "BIO";
+    public static final String SP_USER_WEBSITE = "WEBSITE";
+    public static final String SP_USER_POSTS = "POSTS";
+    public static final String SP_USER_FOLLOWS = "FOLLOWS";
+    public static final String SP_USER_FOLLOWERS = "FOLLOWERS";
 }

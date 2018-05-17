@@ -44,8 +44,8 @@ import static com.demo.instaoff.CONSTANTS.CLIENT_ID;
 import static com.demo.instaoff.CONSTANTS.CLIENT_SECRET;
 import static com.demo.instaoff.CONSTANTS.REDIRECT_URI;
 import static com.demo.instaoff.CONSTANTS.SP;
-import static com.demo.instaoff.CONSTANTS.SP_DP;
-import static com.demo.instaoff.CONSTANTS.SP_NAME;
+import static com.demo.instaoff.CONSTANTS.SP_USER_PROFILER;
+import static com.demo.instaoff.CONSTANTS.SP_USER_FULL_NAME;
 import static com.demo.instaoff.CONSTANTS.SP_TOKEN;
 import static com.demo.instaoff.CONSTANTS.TOKENURL;
 
@@ -61,12 +61,16 @@ import static com.demo.instaoff.CONSTANTS.TOKENURL;
 public class LoginFragment extends DialogFragment {
     private static final String TAG = "LoginFragment";
 
-    @BindView(R.id.input_username) EditText _usernameText;
-    @BindView(R.id.input_password) EditText _passwordText;
-    @BindView(R.id.btn_login) Button _loginButton;
+    @BindView(R.id.input_username)
+    EditText _usernameText;
+    @BindView(R.id.input_password)
+    EditText _passwordText;
+    @BindView(R.id.btn_login)
+    Button _loginButton;
 
     private Dialog dialog;
-    @BindView(R.id.progress_bar) ProgressBar progressBar;
+    @BindView(R.id.progress_bar)
+    ProgressBar progressBar;
 
     SharedPreferences spUser;
     SharedPreferences.Editor spEdit;
@@ -108,7 +112,7 @@ public class LoginFragment extends DialogFragment {
     }
 
     @OnClick(R.id.btn_login)
-    public void loginButtonClick (View view){
+    public void loginButtonClick(View view) {
         Log.i(TAG, "Button Clicked");
         /*if (!validate()) {
             onLoginFailed();
@@ -138,8 +142,9 @@ public class LoginFragment extends DialogFragment {
                     }
                 }, 3000);*/
 
-        setupWebviewDialog(authURLFull,username,password);
+        setupWebviewDialog(authURLFull, username, password);
     }
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -150,7 +155,9 @@ public class LoginFragment extends DialogFragment {
         _passwordText.setText("1Asdfgh!");
         return view;
     }
-    @Override public void onDestroyView() {
+
+    @Override
+    public void onDestroyView() {
         super.onDestroyView();
         unbinder.unbind();
     }
@@ -193,19 +200,20 @@ public class LoginFragment extends DialogFragment {
 
 
     MyWVClient wvClient;
+
     /*****  Show Instagram login page in a dialog *****************************/
     public void setupWebviewDialog(String url, String uN, String pW) {
         dialog = new Dialog(getContext());
         dialog.setTitle("Insta Login");
-        Log.i(TAG,url);
+        Log.i(TAG, url);
         WebView webView = new WebView(getContext());
         webView.setVerticalScrollBarEnabled(false);
         webView.setHorizontalScrollBarEnabled(false);
         wvClient = new MyWVClient();
-        wvClient.injectUserCreds(uN,pW,this);
+        wvClient.injectUserCreds(uN, pW, this);
         webView.setWebViewClient(wvClient);//ForceLogin here
         webView.getSettings().setJavaScriptEnabled(true);
-        Log.d(TAG,"setupWebviewDialog "+url);
+        Log.d(TAG, "setupWebviewDialog " + url);
 
         progressBar.setVisibility(View.VISIBLE);
         /*WebSettings mWebSettings = webView.getSettings();
@@ -219,6 +227,7 @@ public class LoginFragment extends DialogFragment {
     /*****  A client to know about WebView navigations  ***********************/
     class MyWVClient extends WebViewClient {
         LoginFragment parentFrag;
+
         @Override
         public void onPageStarted(WebView view, String url, Bitmap favicon) {
             super.onPageStarted(view, url, favicon);
@@ -228,61 +237,62 @@ public class LoginFragment extends DialogFragment {
 
         @Override
         public boolean shouldOverrideUrlLoading(WebView view, String url) {
-            //view.setVisibility(View.GONE);
+            //
             view.setVisibility(View.VISIBLE);
             if (url.startsWith(REDIRECT_URI)) {
-                Log.d(TAG,"Overriding "+url);//
+                Log.d(TAG, "Overriding " + url);//
                 handleUrl(url);
+                view.setVisibility(View.GONE);
                 return true;
             }
-            else{
-
-            }
-            Log.d(TAG,"Not overriding "+url);
+            Log.d(TAG, "Not overriding " + url);
             //https://instagram.com/accounts/logout/
             //https://www.instagram.com/oauth/authorize/?client_id=4216ac46ab584340adacc95d60a58944&redirect_uri=https://www.random.ie/instagram/access-token&response_type=code&display=touch
             //https://www.instagram.com/accounts/login/?force_classic_login=&client_id=4216ac46ab584340adacc95d60a58944&next=/oauth/authorize/%3Fclient_id%3D4216ac46ab584340adacc95d60a58944%26redirect_uri%3Dhttps%3A//www.random.ie/instagram/access-token%26response_type%3Dcode%26display%3Dtouch
             return false;
         }
 
-        private String notLoginFailedCondition = "(document.getElementById('alerts')==null && document.getElementById('id_username')!==null"+
+        private String notLoginFailedCondition = "(document.getElementById('alerts')==null && document.getElementById('id_username')!==null" +
                 "&& document.getElementById('id_password')!==null && document.getElementById('login-form')!==null)";
 
         private String username, password;
         private Intent parent;
-        public void injectUserCreds(String uN, String pW, LoginFragment frag){
+
+        public void injectUserCreds(String uN, String pW, LoginFragment frag) {
             username = uN;
             password = pW;
             parentFrag = frag;
-            Log.d(TAG,username+" "+password);
-            Log.d(TAG,js);
-            js = "javascript:"+
-                    "var allElements = document.getElementsByTagName("+'"'+"*"+'"'+"); console.log(allElements.length);"+
-                    "for (var i = 0, n = allElements.length; i < n; ++i) {var el = allElements[i];if (el.id) { console.log(el.id);}}"+
-                    "console.log(document.getElementById('alerts'));"+
-                    "if("+notLoginFailedCondition+"){"+//No alert so we can try submit the form
-                    "document.getElementById('id_username').value='"+username+"';"+
-                    "document.getElementById('id_password').value='"+password+"';"+
+            Log.d(TAG, username + " " + password);
+            Log.d(TAG, js);
+            js = "javascript:" +
+                    "var allElements = document.getElementsByTagName(" + '"' + "*" + '"' + "); console.log(allElements.length);" +
+                    "for (var i = 0, n = allElements.length; i < n; ++i) {var el = allElements[i];if (el.id) { console.log(el.id);}}" +
+                    "console.log(document.getElementById('alerts'));" +
+                    "if(" + notLoginFailedCondition + "){" +//No alert so we can try submit the form
+                    "document.getElementById('id_username').value='" + username + "';" +
+                    "document.getElementById('id_password').value='" + password + "';" +
                     "document.getElementById('login-form').submit();" +
-                    "(function() { return "+'"'+"LoginATTEMPTED"+'"'+"; })()}"+// Has to be encapsulated in a function
-                    "else if(document.getElementById('login-form')!==null){" + "(function() { return "+'"'+"LoginFAILED"+'"'+"; })()};";// Has to be encapsulated in a function
+                    "(function() { return " + '"' + "LoginATTEMPTED" + '"' + "; })()}" +// Has to be encapsulated in a function
+                    "else if(document.getElementById('login-form')!==null){" + "(function() { return " + '"' + "LoginFAILED" + '"' + "; })()};";// Has to be encapsulated in a function
         }
+
         // The java script string to execute in web view after page loaded
         // First line put a value in input box
         // Second line submit the form
         String js = "";
 
-        final String js_login = "javascript:"+
+        final String js_login = "javascript:" +
                 "document.getElementById('login-form').submit();";
+
         @Override
         public void onPageFinished(WebView view, String url) {
             super.onPageFinished(view, url);
             view.evaluateJavascript(js, new ValueCallback<String>() {
                 @Override
                 public void onReceiveValue(String s) {
-                    Log.d(TAG,s+" WebView Finished");
-                    if(s.contains("FAILED")){
-                        Log.d(TAG,s+" WebView Finished");
+                    Log.d(TAG, s + " WebView Finished");
+                    if (s.contains("FAILED")) {
+                        Log.d(TAG, s + " WebView Finished");
                         //Log.d(TAG,view.getParent());
                         //getParent().finish();
                         //parentFrag.onLoginFailed();
@@ -299,14 +309,14 @@ public class LoginFragment extends DialogFragment {
         public void onReceivedError(WebView view, int errorCode,
                                     String description, String failingUrl) {
 
-            Log.d(TAG,errorCode+" "+description+" onReceivedError");
+            Log.d(TAG, errorCode + " " + description + " onReceivedError");
         }
 
-        private void submitLoginForm(WebView view){
+        private void submitLoginForm(WebView view) {
             view.evaluateJavascript(js_login, new ValueCallback<String>() {
                 @Override
                 public void onReceiveValue(String s) {
-                    Log.d(TAG,s+" Login Form Submit Result");
+                    Log.d(TAG, s + " Login Form Submit Result");
                 }
             });
         }
@@ -321,7 +331,7 @@ public class LoginFragment extends DialogFragment {
 
         } else if (url.contains("error")) {
             String temp[] = url.split("=");
-            Log.e(TAG, "Login error: "+temp[temp.length - 1]);
+            Log.e(TAG, "Login error: " + temp[temp.length - 1]);
         }
     }
 
@@ -330,7 +340,7 @@ public class LoginFragment extends DialogFragment {
         String code;
 
         public MyAsyncTask(String code) {
-            Log.d(TAG,"Async: "+code);
+            Log.d(TAG, "Async: " + code);
             this.code = code;
         }
 
@@ -365,8 +375,8 @@ public class LoginFragment extends DialogFragment {
                 spUser = getActivity().getSharedPreferences(SP, MODE_PRIVATE);
                 spEdit = spUser.edit();
                 spEdit.putString(SP_TOKEN, accessTokenString);
-                spEdit.putString(SP_NAME, fullName);
-                spEdit.putString(SP_DP, dp);
+                spEdit.putString(SP_USER_FULL_NAME, fullName);
+                spEdit.putString(SP_USER_PROFILER, dp);
                 spEdit.commit();
 
             } catch (Exception e) {
@@ -377,7 +387,7 @@ public class LoginFragment extends DialogFragment {
         }
 
         protected void onPostExecute(Long result) {
-            Log.d(TAG,"Async: onPostExecute");
+            Log.d(TAG, "Async: onPostExecute");
             progressBar.setVisibility(View.INVISIBLE);
             onLoginSuccess();
             //finish();
@@ -424,7 +434,7 @@ public class LoginFragment extends DialogFragment {
     }
 
 
-/**
+    /**
      * This interface must be implemented by activities that contain this
      * fragment to allow an interaction in this fragment to be communicated
      * to the activity and potentially other fragments contained in that
