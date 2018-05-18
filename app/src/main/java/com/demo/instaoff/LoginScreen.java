@@ -2,6 +2,7 @@ package com.demo.instaoff;
 
 import com.demo.instaoff.util.SystemUiHider;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -27,7 +28,7 @@ public class LoginScreen extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login_screen);
         spUser = getSharedPreferences(SP, MODE_PRIVATE);
-
+        //spUser.edit().clear();
         if (isLoggedIn()) {
             startActivity(new Intent(this, ProfileView.class));
             finish();
@@ -57,5 +58,18 @@ public class LoginScreen extends AppCompatActivity {
         FragmentManager fm = getSupportFragmentManager();
         LoginWebViewFragment mLoginFragment = LoginWebViewFragment.newInstance();
         mLoginFragment.show(fm, "login_fragment");
+    }
+    //The following function receives the OK code from the logout and finishes this activity immediately
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        switch(requestCode) {
+            case (0) : {
+                if (resultCode == Activity.RESULT_OK) {
+                    finish();
+                }
+                break;
+            }
+        }
     }
 }

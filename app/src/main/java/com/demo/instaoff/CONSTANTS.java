@@ -16,4 +16,5 @@ public class CONSTANTS {
     public static final String SP_USER_POSTS = "POSTS";
     public static final String SP_USER_FOLLOWS = "FOLLOWS";
     public static final String SP_USER_FOLLOWERS = "FOLLOWERS";
+    public static final String SP_USER_RECENT_JSON = "RECENTS_JSON";
 }

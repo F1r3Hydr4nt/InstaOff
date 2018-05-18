@@ -5,6 +5,7 @@ import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.util.Log;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.json.JSONTokener;
 
@@ -14,6 +15,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.net.ssl.HttpsURLConnection;
 
@@ -31,6 +34,7 @@ import static com.demo.instaoff.CONSTANTS.SP_USER_POSTS;
 import static com.demo.instaoff.CONSTANTS.SP_USER_PROFILER;
 import static com.demo.instaoff.CONSTANTS.SP_USER_FULL_NAME;
 import static com.demo.instaoff.CONSTANTS.SP_TOKEN;
+import static com.demo.instaoff.CONSTANTS.SP_USER_RECENT_JSON;
 import static com.demo.instaoff.CONSTANTS.SP_USER_WEBSITE;
 import static com.demo.instaoff.CONSTANTS.TOKENURL;
 
@@ -61,13 +65,12 @@ public class InstagramRequest extends AsyncTask<URL, Integer, Long> {
 
     MyCallbackInterface callback;
 
-    public InstagramRequest(String code, RequestType type, Activity parentActivity, MyCallbackInterface callback) {
+    public InstagramRequest(String code, RequestType type, SharedPreferences sharedPreferences, MyCallbackInterface callback) {
         Log.d(TAG, "Async: " + code);
         this.code = code;
         this.type = type;
-        this.parentActivity = parentActivity;
         this.callback = callback;
-        spUser = parentActivity.getSharedPreferences(SP, MODE_PRIVATE);
+        spUser = sharedPreferences;
     }
 
     protected Long doInBackground(URL... urls) {
@@ -123,7 +126,7 @@ public class InstagramRequest extends AsyncTask<URL, Integer, Long> {
     private void parseResponse(JSONObject jsonObject){
         spEdit = spUser.edit();
         try{
-            Log.i(TAG, jsonObject.toString(1));
+            //Log.i(TAG, jsonObject.toString(1));
             switch (this.type) {
                 case TOKEN:
                     accessTokenString = jsonObject.getString("access_token"); //Here is your ACCESS TOKEN
@@ -132,32 +135,33 @@ public class InstagramRequest extends AsyncTask<URL, Integer, Long> {
                     spEdit.putString(SP_TOKEN, accessTokenString);
                     spEdit.putString(SP_USER_FULL_NAME, fullName);
                     spEdit.putString(SP_USER_PROFILER, profiler);
+
                     spEdit.commit();
                     break;
                 case GET_USER:
-                    bio = jsonObject.getJSONObject("user").getString("bio");
-                    website = jsonObject.getJSONObject("user").getString("website");
-                    posts = jsonObject.getJSONObject("user").getJSONObject("counts").getString("media");
-                    follows = jsonObject.getJSONObject("user").getJSONObject("counts").getString("follows");
-                    followers = jsonObject.getJSONObject("user").getJSONObject("counts").getString("followed_by");
+                    bio = jsonObject.getJSONObject("data").getString("bio");
+                    posts = jsonObject.getJSONObject("data").getJSONObject("counts").getString("media");
+                    follows = jsonObject.getJSONObject("data").getJSONObject("counts").getString("follows");
+                    followers = jsonObject.getJSONObject("data").getJSONObject("counts").getString("followed_by");
                     spEdit.putString(SP_USER_BIO, bio);
-                    spEdit.putString(SP_USER_WEBSITE, website);
                     spEdit.putString(SP_USER_POSTS, posts);
                     spEdit.putString(SP_USER_FOLLOWS, follows);
                     spEdit.putString(SP_USER_FOLLOWERS, followers);
+                    spEdit.commit();
                     break;
                 case GET_RECENTS:
+                    Log.i(TAG,jsonObject.getJSONArray("data").toString());
+                    spEdit.putString(SP_USER_RECENT_JSON,jsonObject.getJSONArray("data").toString() );
+                    spEdit.commit();
                     break;
-
-                ///users/self/media/recent
             }
         }catch (Exception e){
-
+            e.printStackTrace();
         }
     }
 
     protected void onPostExecute(Long result) {
-        Log.d(TAG, "Async: onPostExecute");
+        //Log.d(TAG, "Async: onPostExecute");
         this.callback.onCallback("Success");
     }
 
@@ -184,3 +188,4 @@ public class InstagramRequest extends AsyncTask<URL, Integer, Long> {
         return str;
     }
 }
+

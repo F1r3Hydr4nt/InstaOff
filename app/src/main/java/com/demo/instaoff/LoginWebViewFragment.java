@@ -15,7 +15,9 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.TextView;
 
+import static android.content.Context.MODE_PRIVATE;
 import static com.demo.instaoff.CONSTANTS.REDIRECT_URI;
+import static com.demo.instaoff.CONSTANTS.SP;
 
 public class LoginWebViewFragment extends DialogFragment {
     private static final String TAG = "LoginWebViewFragment";
@@ -117,7 +119,7 @@ public class LoginWebViewFragment extends DialogFragment {
             view.evaluateJavascript(js, new ValueCallback<String>() {
                 @Override
                 public void onReceiveValue(String s) {
-                    Log.d(TAG, s + " WebView Finished");
+                    Log.d(TAG, "WebView Finished");
                 }
             });
             dialog.show();
@@ -130,7 +132,7 @@ public class LoginWebViewFragment extends DialogFragment {
             String temp[] = url.split("=");
             code = temp[1];
             //new MyAsyncTask(code).execute();
-            new InstagramRequest(code, InstagramRequest.RequestType.TOKEN, getActivity(), new InstagramRequest.MyCallbackInterface() {
+            new InstagramRequest(code, InstagramRequest.RequestType.TOKEN, getContext().getSharedPreferences(SP, MODE_PRIVATE), new InstagramRequest.MyCallbackInterface() {
                 @Override
                 public void onCallback(String result) {
                     onLoginSuccess();
@@ -146,7 +148,7 @@ public class LoginWebViewFragment extends DialogFragment {
         dialog.dismiss();
         Intent i = new Intent(getContext(), ProfileView.class);
         i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        startActivity(i);
-        //getActivity().getFragmentManager().beginTransaction().remove((Fragment)this).commit();
+        getActivity().finish();
+        startActivityForResult(i, 0);//Here we start and tell the profileView that we expect it to return a result when it's completed
     }
 }

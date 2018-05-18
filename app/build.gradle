@@ -40,6 +40,8 @@ dependencies {
     }
     implementation "com.android.support:support-fragment:26.1.0"
     annotationProcessor 'com.github.bumptech.glide:compiler:4.7.1'
+    annotationProcessor 'com.github.bumptech.glide:compiler'
+
     compile 'com.android.support:cardview-v7:23.1.1'
 
 }
